@@ -1,0 +1,122 @@
+---
+title: "Lab 5"
+author: "Hershel Mehta"
+date: "March 29, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(modelr)
+library(resamplr)
+library(ISLR)
+```
+
+# Validation Set Approach
+
+First, we split our data into a training and test set.
+
+```{r}
+set.seed(1)
+
+train_set <- sample_n(Auto, 196)
+val_set <- setdiff(Auto, train_set)
+```
+
+We fit a linear model and find the RMSE on the validation set.
+
+```{r}
+lin_fit <- lm(mpg ~ horsepower, data = train_set)
+modelr::rmse(lin_fit, data = val_set)
+```
+
+We fit a quadratic model and find the RMSE on the validation set.
+
+```{r}
+quad_fit <- lm(mpg ~ poly(horsepower, 2), data = train_set)
+modelr::rmse(quad_fit, data = val_set)
+```
+
+We fit a cubic model and find the RMSE on the validation set.
+
+```{r}
+cubic_fit <- lm(mpg ~ poly(horsepower, 3), data = train_set)
+modelr::rmse(cubic_fit, data = val_set)
+```
+
+# Leave-One-Out Cross-Validation
+
+First, create a tibble with the polynomial degrees you would like to test.
+
+```{r}
+poly_degrees <- tibble(
+  n = 1:5
+)
+```
+
+We write a function that takes a number of degrees "n_" and does the following:
+
+* Splits the data using Leave-One-Out Cross-Validation (using `resamplr::crossv_loo`)
+* Creates two new columns containing:
+    + A polynomial model of degree "n_" fit to the training data
+    + The "RMSE" of the model tested on the testing data
+* Returns the mean "RMSE" across all splits
+
+```{r}
+poly_loocv <- function(n_) {
+  loocv_rmse <- 
+    Auto %>% 
+    resamplr::crossv_loo() %>% 
+    mutate(
+      model = map(train, ~lm(mpg ~ poly(horsepower, n_), data = .)),
+      rmse = map2_dbl(model, test, rmse)
+    )
+  
+  mean(loocv_rmse$rmse)
+}
+```
+
+We call the function on each of the desired polynomial degrees, to obtain the mean "RMSE" using Leave-One-Out Cross-Validation on degree "n".
+
+```{r}
+poly_degrees %>% 
+  mutate(
+    mean_rmse = map_dbl(n, poly_loocv)
+  )
+```
+
+# k-Fold Cross-Validation
+
+We write a function that takes a number of degrees "n_" and number of folds "k_", and does the following:
+
+* Splits the data using k-Fold Cross-Validation (using `resamplr::crossv_kfold`)
+* Creates two new columns containing:
+    + A polynomial model of degree "n_" fit to the training data
+    + The "RMSE" of the model tested on the testing data
+* Returns the mean "RMSE" across all splits
+
+```{r}
+poly_kfold <- function(n_, k_) {
+  kfold_rmse <- 
+    Auto %>% 
+    resamplr::crossv_kfold(k_) %>% 
+    mutate(
+      model = map(train, ~lm(mpg ~ poly(horsepower, n_), data = .)),
+      rmse = map2_dbl(model, test, rmse)
+    )
+  
+  mean(kfold_rmse$rmse)
+}
+```
+
+We call the function on each of the desired polynomial degrees, to obtain the mean "RMSE" using k-Fold Cross-Validation on degree "n" with "k" folds.
+
+```{r}
+poly_degrees %>% 
+  mutate(
+    mean_rmse = map2_dbl(n, 10, poly_kfold)
+  )
+```
+
