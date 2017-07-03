@@ -15,13 +15,9 @@ knitr::opts_chunk$set(echo = TRUE, dpi = 400, out.width = "100%")
 ```{r}
 #Libraries to be used.
 library(tidyverse)
-library(stringr)
-library(purrr)
-library(sf)
-library(forcats)
 ```
 
-# This section needs a major overhaul! OMGGGGGGGG
+This section needs a major overhaul! OMGGGGGGGG
 
 ## 2.3 Lab: Introduction to R
 
@@ -333,7 +329,7 @@ select multiple rows and columns at a time, by providing vectors as the
 indices.
 
 ```{r}
-a[c(1,3), c(2,4)]
+a[c(1, 3), c(2, 4)]
 a[1:3, 2:4]
 a[1:2, ]
 a[, 1:2]
@@ -346,7 +342,7 @@ respectively. R treats a single row or column of a matrix as a vector.
 
 ```{r}
 a[1,]
-a[-c(1,3), ]
+a[-c(1, 3), ]
 a[1,]
 ```
 
@@ -354,8 +350,8 @@ The use of a negative sign - in the index tells R to keep all rows or columns
 except those indicated in the index.
 
 ```{r}
-a[-c(1,3) ,]
-a[-c(1,3) ,-c(1,3,4)]
+a[-c(1, 3) ,]
+a[-c(1, 3) ,-c(1, 3, 4)]
 ```
 
 The dim() function outputs the number of rows followed by the number of dim() columns of a given matrix.
