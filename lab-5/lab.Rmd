@@ -14,6 +14,8 @@ library(resamplr)
 library(ISLR)
 ```
 
+# Cross
+
 # Validation Set Approach
 
 First, we split our data into a training and test set.
@@ -119,4 +121,32 @@ poly_degrees %>%
     mean_rmse = map2_dbl(n, 10, poly_kfold)
   )
 ```
+
+# The Bootstrap
+
+```{r}
+sample_alpha <- function(x) {
+  data <- as_tibble(x)
+  
+  X <- data$X
+  Y <- data$Y
+  
+  (var(Y) - cov(X,Y)) / (var(X) + var(Y) - 2 * cov(X,Y))
+}
+```
+
+
+```{r}
+Portfolio %>% 
+  resamplr::bootstrap(R = 1000) %>% 
+  mutate(
+    alpha = map_dbl(sample, sample_alpha)
+  ) %>% 
+  summarise(
+    alpha_mean = mean(alpha),
+    alpha_stddev = sd(alpha)
+  )
+```
+
+
 
