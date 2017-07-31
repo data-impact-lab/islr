@@ -26,6 +26,19 @@ test <- setdiff(Hitters, train)
 First, create a dataframe with one column, "p" = the size of the model (i.e., the number of predictors used in best subset)
 
 ```{r}
+best_subset_model <- function(x, p_) {
+  train_data <- as_tibble(x)
+  
+  best_subset_model <- leaps::regsubsets(Salary ~ ., train_data, nvmax = 19)
+  
+  best_subset_coef <- coef(best_subset_model, p_)
+  
+  tail(names(best_subset_coef), n = -1)
+}
+```
+
+
+```{r}
 best_subset_coef <- function(x, p_) {
   train_data <- as_tibble(x)
   
@@ -65,8 +78,6 @@ best_subset <-
     model = map2(train, var_names, best_subset_lm_fit),
     rmse = map2_dbl(model, test, modelr::rmse)
   )
-
-best_subset$var_names
 ```
 
 
