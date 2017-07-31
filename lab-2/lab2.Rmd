@@ -3,7 +3,7 @@ title: "ISLR-Chapter-2-lab"
 author: "Christopher Oh"
 date: 2017-06-29
 output:
-  html_document:
+  github_document:
     toc: true
     toc_depth: 6
 ---
@@ -16,8 +16,6 @@ knitr::opts_chunk$set(echo = TRUE, dpi = 400, out.width = "100%")
 #Libraries to be used.
 library(tidyverse)
 ```
-
-This section needs a major overhaul! OMGGGGGGGG
 
 ## 2.3 Lab: Introduction to R
 
@@ -175,7 +173,6 @@ var(y)
 sqrt(var(y))
 sd(y)
 ```
-
 
 
 ### 2.3.2 Graphics

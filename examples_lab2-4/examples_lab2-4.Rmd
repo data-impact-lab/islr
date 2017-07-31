@@ -1,0 +1,140 @@
+---
+title: "Examples from lab 2 - 4"
+author: "Christopher Oh"
+date: 2017-07-29
+output:
+  github_document:
+    toc: true
+    toc_depth: 6
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dpi = 400, out.width = "100%")
+```
+
+```{r}
+#Libraries to be used.
+library(tidyverse)
+library(ISLR)
+```
+
+## ggplot example
+
+Read in the file
+
+```{r}
+path_auto_csv <- "C:/Users/logicalfellac/Downloads/ISLR/Auto.csv"
+auto <-
+  path_auto_csv %>% 
+  read_csv(col_names = TRUE, na = "?") %>%
+  filter_all(all_vars(!is.na(.))) %>% 
+  mutate(cylinders = as.factor(cylinders))
+```
+
+### Original
+
+```{r}
+plot(auto$cylinders, auto$mpg, col="red", varwidth=T, xlab="cylinders", ylab="MPG")
+```
+
+### Revised
+
+```{r}
+auto %>%
+  ggplot(aes(cylinders, mpg)) +
+  geom_boxplot(varwidth = TRUE) +
+  labs(
+    x = "Cylinders",
+    y = "MPG"
+  )
+```
+
+
+## Logistic regression example
+
+### Original
+
+Separate the training / test set
+
+```{r}
+attach(Smarket)
+train=(Year <2005)
+Smarket.2005=Smarket[!train ,]
+dim(Smarket.2005)
+Direction.2005= Direction [!train]
+```
+
+Fit the logistic regression model using the training set
+
+```{r}
+glm.fits=glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume ,
+             data=Smarket ,family=binomial ,subset=train)
+```
+
+Add predictions to the test set
+
+```{r}
+glm.probs=predict (glm.fits,Smarket.2005, type="response")
+glm.pred=rep("Down",252)
+glm.pred[glm.probs >.5]="Up"
+```
+
+
+Compute the prediction error
+
+```{r}
+table(glm.pred ,Direction.2005)
+mean(glm.pred==Direction.2005)
+mean(glm.pred!=Direction.2005)
+```
+
+
+### Revised
+
+Get the data into a tibble format
+
+```{r}
+smarket <- as.tibble(Smarket)
+```
+
+Separate the training / test set
+
+```{r}
+train <-
+  smarket %>%
+  filter(Year < 2005)
+test <-
+  smarket %>% 
+  filter(Year >= 2005)
+```
+
+Logistic regression model on the training set
+
+```{r}
+glm_fit <- 
+  glm(
+    Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
+    data = train,
+    family = binomial
+  )
+```
+
+Add prediction to the test set
+
+```{r}
+test <-
+  test %>%
+  mutate(
+    pred = predict(glm_fit, newdata = test, type = "response"),
+    pred_dir = ifelse(pred > .5, "Up", "Down")
+  )
+```
+
+Calculate the error on the test set
+
+```{r}
+test %>%
+  select(Direction, pred_dir) %>% 
+  mutate(err = ifelse(Direction != pred_dir, 1, 0)) %>% 
+  summarize(mean(err))
+```
