@@ -1,6 +1,6 @@
 ---
-title: "Examples from lab 2 - 4"
-author: "Christopher Oh"
+title: "Examples from lab 2 - 6"
+author: "Hershel Mehta and Chirstopher Oh"
 date: 2017-07-29
 output:
   github_document:
@@ -192,7 +192,7 @@ Portfolio %>%
 
 ### Original
 
-NOTE: Parts of the original appear to be deprecated, so I've commented those lines o out
+NOTE: Parts of the original appear to be deprecated (since `leaps::regsubsets()` appears to randomly add suffixes to many of the variables). I've commented those lines out, so we can still knit the file
 
 ```{r}
 set.seed(1)

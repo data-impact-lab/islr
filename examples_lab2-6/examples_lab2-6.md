@@ -1,6 +1,6 @@
-Examples from lab 2 - 4
+Examples from lab 2 - 6
 ================
-Christopher Oh
+Hershel Mehta and Chirstopher Oh
 2017-07-29
 
 -   [ggplot example](#ggplot-example)
@@ -232,7 +232,7 @@ Model Selection using Cross-Validation
 
 ### Original
 
-NOTE: Parts of the original appear to be deprecated, so I've commented those lines o out
+NOTE: Parts of the original appear to be deprecated (since `leaps::regsubsets()` appears to randomly add suffixes to many of the variables). I've commented those lines out, so we can still knit the file
 
 ``` r
 set.seed(1)
