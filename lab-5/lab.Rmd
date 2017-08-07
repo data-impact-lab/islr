@@ -10,13 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(modelr)
-library(resamplr)
 library(ISLR)
 ```
 
-# Cross
+# Cross-Validation
 
-# Validation Set Approach
+## Validation Set Approach
 
 First, we split our data into a training and test set.
 
@@ -48,7 +47,7 @@ cubic_fit <- lm(mpg ~ poly(horsepower, 3), data = train_set)
 modelr::rmse(cubic_fit, data = val_set)
 ```
 
-# Leave-One-Out Cross-Validation
+## k-Fold Cross-Validation
 
 First, create a tibble with the polynomial degrees you would like to test.
 
@@ -57,39 +56,6 @@ poly_degrees <- tibble(
   n = 1:5
 )
 ```
-
-We write a function that takes a number of degrees "n_" and does the following:
-
-* Splits the data using Leave-One-Out Cross-Validation (using `resamplr::crossv_loo`)
-* Creates two new columns containing:
-    + A polynomial model of degree "n_" fit to the training data
-    + The "RMSE" of the model tested on the testing data
-* Returns the mean "RMSE" across all splits
-
-```{r}
-poly_loocv <- function(n_) {
-  loocv_rmse <- 
-    Auto %>% 
-    resamplr::crossv_loo() %>% 
-    mutate(
-      model = map(train, ~lm(mpg ~ poly(horsepower, n_), data = .)),
-      rmse = map2_dbl(model, test, rmse)
-    )
-  
-  mean(loocv_rmse$rmse)
-}
-```
-
-We call the function on each of the desired polynomial degrees, to obtain the mean "RMSE" using Leave-One-Out Cross-Validation on degree "n".
-
-```{r}
-poly_degrees %>% 
-  mutate(
-    mean_rmse = map_dbl(n, poly_loocv)
-  )
-```
-
-# k-Fold Cross-Validation
 
 We write a function that takes a number of degrees "n_" and number of folds "k_", and does the following:
 
@@ -103,7 +69,7 @@ We write a function that takes a number of degrees "n_" and number of folds "k_"
 poly_kfold <- function(n_, k_) {
   kfold_rmse <- 
     Auto %>% 
-    resamplr::crossv_kfold(k_) %>% 
+    modelr::crossv_kfold(k_) %>% 
     mutate(
       model = map(train, ~lm(mpg ~ poly(horsepower, n_), data = .)),
       rmse = map2_dbl(model, test, rmse)
@@ -113,16 +79,34 @@ poly_kfold <- function(n_, k_) {
 }
 ```
 
-We call the function on each of the desired polynomial degrees, to obtain the mean "RMSE" using k-Fold Cross-Validation on degree "n" with "k" folds.
+We call the function on each of the desired polynomial degrees, to obtain the mean "RMSE" using k-Fold Cross-Validation on degree "n" with k = 10 folds.
 
 ```{r}
+k <- 10
+
 poly_degrees %>% 
   mutate(
-    mean_rmse = map2_dbl(n, 10, poly_kfold)
+    mean_rmse = map2_dbl(n, k, poly_kfold)
   )
 ```
 
+## Leave-One-Out Cross-Validation
+
+We note that leave-one-out cross-validation is simply k-fold validation with k = n. Therefore, we can just modify the parameters in our k-fold call!
+
+```{r}
+k <- Auto %>% nrow()
+
+poly_degrees %>% 
+  mutate(
+    mean_rmse = map2_dbl(n, k, poly_kfold)
+  )
+```
+
+
 # The Bootstrap
+
+## Estimating the Accuracy of a Statistic of Interest
 
 ```{r}
 sample_alpha <- function(x) {
@@ -138,13 +122,29 @@ sample_alpha <- function(x) {
 
 ```{r}
 Portfolio %>% 
-  resamplr::bootstrap(R = 1000) %>% 
+  modelr::bootstrap(n = 1000) %>% 
   mutate(
-    alpha = map_dbl(sample, sample_alpha)
+    alpha = map_dbl(strap, sample_alpha)
   ) %>% 
   summarise(
     alpha_mean = mean(alpha),
     alpha_stddev = sd(alpha)
+  )
+```
+
+## Estimating the Accuracy of a Linear Regression Model
+
+```{r}
+Auto %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    model = map(strap, ~lm(mpg ~ horsepower, data = .)),
+    intercept = map_dbl(model, ~coef(.)[["(Intercept)"]]),
+    slope = map_dbl(model, ~coef(.)[["horsepower"]])
+  ) %>% 
+  summarise(
+    intercept_sd = sd(intercept),
+    slope_sd = sd(slope)
   )
 ```
 
