@@ -271,7 +271,7 @@ best_subset_model <- function(x, p_) {
 
 To obtain the cross-validated RMSE for the best model of size "p_", we write a function that takes the number of predictors "p_" for best subset and number of folds "k_", and does the following:
 
-* Splits the data using k-Fold Cross-Validation (using `resamplr::crossv_kfold`)
+* Splits the data using k-Fold Cross-Validation (using `modelr::crossv_kfold`)
 * Creates two new columns containing:
     + the best model of degree "p_" fit to the training split
     + The "RMSE" of the model tested on the testing split
@@ -281,7 +281,7 @@ To obtain the cross-validated RMSE for the best model of size "p_", we write a f
 best_subset_kfold <- function(p_, k_) {
   best_subset <- 
     Hitters %>% 
-    resamplr::crossv_kfold(k_) %>% 
+    modelr::crossv_kfold(k_) %>% 
     mutate(
       model = map2(train, p_, best_subset_model),
       rmse = map2_dbl(model, test, modelr::rmse)
