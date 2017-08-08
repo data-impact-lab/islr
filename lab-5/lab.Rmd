@@ -59,7 +59,7 @@ poly_degrees <- tibble(
 
 We write a function that takes a number of degrees "n_" and number of folds "k_", and does the following:
 
-* Splits the data using k-Fold Cross-Validation (using `resamplr::crossv_kfold`)
+* Splits the data using k-Fold Cross-Validation (using `modelr::crossv_kfold`)
 * Creates two new columns containing:
     + A polynomial model of degree "n_" fit to the training data
     + The "RMSE" of the model tested on the testing data
