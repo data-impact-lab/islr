@@ -34,7 +34,7 @@ auto <-
 plot(auto$cylinders, auto$mpg, col="red", varwidth=T, xlab="cylinders", ylab="MPG")
 ```
 
-<img src="examples_lab2-4_files/figure-markdown_github/unnamed-chunk-2-1.png" width="100%" />
+<img src="examples_lab2-6_files/figure-markdown_github/unnamed-chunk-2-1.png" width="100%" />
 
 ### Revised
 
@@ -48,7 +48,7 @@ auto %>%
   )
 ```
 
-<img src="examples_lab2-4_files/figure-markdown_github/unnamed-chunk-3-1.png" width="100%" />
+<img src="examples_lab2-6_files/figure-markdown_github/unnamed-chunk-3-1.png" width="100%" />
 
 Logistic regression example
 ---------------------------
@@ -212,9 +212,9 @@ We create 1000 bootsrapped samples, calculate the alpha statistic for each sampl
 
 ``` r
 Portfolio %>% 
-  resamplr::bootstrap(R = 1000) %>% 
+  modelr::bootstrap(n = 1000) %>% 
   mutate(
-    alpha = map_dbl(sample, sample_alpha)
+    alpha = map_dbl(strap, sample_alpha)
   ) %>% 
   summarise(
     alpha_mean = mean(alpha),
@@ -283,16 +283,23 @@ cv.errors=matrix(NA,k,19, dimnames=list(NULL, paste(1:19)))
 
 ### Revised
 
+First, split the `Hitters` data into a training and testing set. And, create a dataframe with one column, "p" = the size of the model (i.e., the number of predictors to be tested in best\_subset)
+
 ``` r
 set.seed(1)
 
 train <- sample_frac(Hitters, 0.5)
 test <- setdiff(Hitters, train)
+
+num_variables <- tibble(
+  p = 1:19
+)
 ```
 
-First, we write a function that takes a dataset and number of predictors "p\_", and does the following:
+To generate the best model of a given size "p\_", we write a function that takes a dataset and number of predictors "p\_", and does the following:
 
 1.  runs exhaustive search for models of size "p\_" with the lowest R^2 value (using `leaps::regsubsets()` function)
+
 2.  finds the variables that produce the best model of size "p\_"
 3.  fits and returns the best linear model
 
@@ -310,11 +317,11 @@ best_subset_model <- function(x, p_) {
 }
 ```
 
-Then, we write a function that takes the number of predictors "p\_" for best subset and number of folds "k\_", and does the following:
+To obtain the cross-validated RMSE for the best model of size "p\_", we write a function that takes the number of predictors "p\_" for best subset and number of folds "k\_", and does the following:
 
--   Splits the data using k-Fold Cross-Validation (using `resamplr::crossv_kfold`)
+-   Splits the data using k-Fold Cross-Validation (using `modelr::crossv_kfold`)
 -   Creates two new columns containing:
-    -   the best model of degree "n\_" fit to the training split
+    -   the best model of degree "p\_" fit to the training split
     -   The "RMSE" of the model tested on the testing split
 -   Returns the mean "RMSE" across all folds
 
@@ -322,7 +329,7 @@ Then, we write a function that takes the number of predictors "p\_" for best sub
 best_subset_kfold <- function(p_, k_) {
   best_subset <- 
     Hitters %>% 
-    resamplr::crossv_kfold(k_) %>% 
+    modelr::crossv_kfold(k_) %>% 
     mutate(
       model = map2(train, p_, best_subset_model),
       rmse = map2_dbl(model, test, modelr::rmse)
@@ -332,15 +339,7 @@ best_subset_kfold <- function(p_, k_) {
 }
 ```
 
-First, create a dataframe with one column, "p" = the size of the model (i.e., the number of predictors used in best subset)
-
-``` r
-num_variables <- tibble(
-  p = 1:19
-)
-```
-
-We call the 'beson each of the desired polynomial degrees, to obtain the mean "RMSE" using k-Fold Cross-Validation on degree "n" with "k" folds.
+We call the `best_subset_kfold()` function on each of the desired polynomial degrees, to obtain the mean "RMSE" using k-Fold Cross-Validation on degree "n" with "k" folds.
 
 ``` r
 num_variables %>% 
