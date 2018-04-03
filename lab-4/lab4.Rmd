@@ -3,7 +3,7 @@ title: "ISLR-Chapter-4-lab"
 author: "Christopher Oh"
 date: 2017-07-12
 output:
-  html_document:
+  github_document:
     toc: true
     toc_depth: 6
 ---
@@ -28,9 +28,9 @@ names(Smarket)
 dim(Smarket)
 summary(Smarket)
 pairs(Smarket)
-cor(Smarket)
+#cor(Smarket)
 cor(Smarket[,-9])
-View(Smarket)
+#View(Smarket)
 Smarket %>% 
   mutate(index = row_number()) %>% 
   ggplot(aes(index, Volume)) +
@@ -42,7 +42,7 @@ Smarket %>%
 
 Wrong way
 
-```{r}
+```{r, eval=FALSE}
 glm.fits=glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume,data=Smarket,family=binomial)
 summary(glm.fits)
 coef(glm.fits)
@@ -60,7 +60,7 @@ mean(glm.pred==Direction)
 
 Split into training / test
 
-```{r}
+```{r, eval=FALSE}
 train=(Year<2005)
 Smarket.2005=Smarket[!train,]
 dim(Smarket.2005)
@@ -132,7 +132,7 @@ test %>%
 
 # Linear Discriminant Analysis
 
-```{r}
+```{r, eval=FALSE}
 library(MASS)
 lda.fit=lda(Direction~Lag1+Lag2,data=Smarket,subset=train)
 lda.fit
@@ -152,6 +152,7 @@ sum(lda.pred$posterior[,1]>.9)
 Revised
 
 ```{r}
+library(MASS)
 lda_fit <- lda(Direction ~ Lag1 + Lag2, data = train)
 lda_pred <- predict(lda_fit, test)
 test %>%
